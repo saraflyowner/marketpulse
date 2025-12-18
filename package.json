@@ -1,18 +1,38 @@
 {
-  "name": "marketpulse",
-  "version": "0.1.0",
-  "type": "module",
+  "name": "marketpulse-core",
+  "version": "1.0.0",
+  "description": "MarketPulse Core Service - Telegram Bot & Market Intelligence Engine",
+  "private": true,
+  "type": "commonjs",
+
+  "main": "dist/index.js",
+
+  "engines": {
+    "node": ">=18.0.0"
+  },
+
   "scripts": {
-    "bot": "tsx src/bot/index.ts"
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src --ext .ts",
+    "clean": "rimraf dist",
+    "prestart": "npm run build"
   },
+
   "dependencies": {
-    "dotenv": "^17.2.3",
-    "ethers": "^6.10.0",
-    "node-telegram-bot-api": "^0.67.0"
+    "axios": "^1.6.2",
+    "dotenv": "^16.4.0",
+    "node-fetch": "^3.3.2",
+    "telegraf": "^4.16.2"
   },
+
   "devDependencies": {
-    "@types/node": "^25.0.3",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "@types/node": "^20.10.5",
+    "@types/node-fetch": "^3.0.3",
+    "eslint": "^8.56.0",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   }
 }
