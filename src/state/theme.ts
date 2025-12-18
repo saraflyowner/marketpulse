@@ -1,9 +1,15 @@
-import { MarketState } from "./realState";
+import type { MarketState } from './realState.js';
 
-export type Theme = "CALM" | "TENSION" | "TRANSITION";
+export type Theme = 'CALM' | 'TENSE' | 'TRANSITION';
 
-export function detectTheme(state: MarketState): Theme {
-  if (state.volatility === "LOW") return "CALM";
-  if (state.structure === "TRANSITION") return "TRANSITION";
-  return "TENSION";
+export function resolveTheme(state: MarketState): Theme {
+  switch (state) {
+    case 'CLEAN':
+      return 'CALM';
+    case 'WAIT':
+      return 'TRANSITION';
+    case 'NOISE':
+    case 'RISK':
+      return 'TENSE';
+  }
 }

@@ -1,39 +1,28 @@
-import TelegramBot from 'node-telegram-bot-api';
+import TelegramBot, { Message } from 'node-telegram-bot-api';
 
-let bot: TelegramBot | null = null;
-
-export async function startBot() {
-  const BOT_TOKEN = process.env.BOT_TOKEN;
-  const MODE = process.env.BOT_MODE || 'webhook';
-
-  if (!BOT_TOKEN) {
-    throw new Error('BOT_TOKEN is missing');
+function mustEnv(name: string): string {
+  const v = process.env[name];
+  if (!v || !v.trim()) {
+    console.error(`❌ Missing ENV: ${name}`);
+    process.exit(1);
   }
-
-  if (MODE === 'polling') {
-    bot = new TelegramBot(BOT_TOKEN, { polling: true });
-    console.log('🤖 Bot started in POLLING mode');
-  } else {
-    bot = new TelegramBot(BOT_TOKEN);
-    console.log('🤖 Bot started in WEBHOOK mode');
-  }
-
-  registerHandlers(bot);
+  return v.trim();
 }
 
-export function setWebhook(url: string) {
-  if (!bot) throw new Error('Bot not initialized');
-  return bot.setWebHook(url);
-}
+export async function startBot(): Promise<TelegramBot> {
+  const BOT_TOKEN = mustEnv('BOT_TOKEN');
 
-function registerHandlers(bot: TelegramBot) {
-  bot.onText(/^\/start$/, async (msg) => {
+  const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+
+  console.log('🤖 MarketPulseCore bot started');
+
+  bot.onText(/^\/start$/, async (msg: Message) => {
     await bot.sendMessage(
       msg.chat.id,
-      `👋 Welcome to MarketPulse
+      `👋 Welcome to MarketPulseCore
 
-Market state intelligence.
-No signals. No noise.
+Market regime awareness only.
+No signals. No financial advice.
 
 Commands:
 /status
@@ -41,38 +30,35 @@ Commands:
     );
   });
 
-  bot.onText(/^\/help$/, async (msg) => {
+  bot.onText(/^\/help$/, async (msg: Message) => {
     await bot.sendMessage(
       msg.chat.id,
-      `ℹ️ MarketPulse Help
+      `ℹ️ Help
 
-• Market regime
+MarketPulse provides:
+• Regime context
 • Risk environment
-• Volatility context
-
-No financial advice.`
+• Volatility state`
     );
   });
 
-  bot.onText(/^\/status$/, async (msg) => {
+  bot.onText(/^\/status$/, async (msg: Message) => {
     await bot.sendMessage(
       msg.chat.id,
-      `✅ MarketPulseCore is online
-🌐 Mode: ${process.env.BOT_MODE || 'webhook'}`
+      `✅ Status: ONLINE
+🌐 Mode: Global
+🔒 Access: Controlled`
     );
   });
 
-  bot.on('message', async (msg) => {
-    if (!msg.text) return;
-    if (msg.text.startsWith('/')) return;
-
-    await bot.sendMessage(
-      msg.chat.id,
-      '❓ Unknown command. Use /help.'
-    );
+  bot.on('message', async (msg: Message) => {
+    if (!msg.text || msg.text.startsWith('/')) return;
+    await bot.sendMessage(msg.chat.id, '❓ Unknown command. Use /help');
   });
 
-  bot.on('polling_error', (e) =>
-    console.error('⚠️ Polling error:', e.message)
-  );
+  bot.on('polling_error', (err: Error) => {
+    console.error('⚠️ Polling error:', err.message);
+  });
+
+  return bot;
 }
