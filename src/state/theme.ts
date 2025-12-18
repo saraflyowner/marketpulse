@@ -1,15 +1,11 @@
-import type { MarketState } from './realState.js';
+import { MarketStateType } from "./realState";
 
-export type Theme = 'CALM' | 'TENSE' | 'TRANSITION';
-
-export function resolveTheme(state: MarketState): Theme {
-  switch (state) {
-    case 'CLEAN':
-      return 'CALM';
-    case 'WAIT':
-      return 'TRANSITION';
-    case 'NOISE':
-    case 'RISK':
-      return 'TENSE';
-  }
-}
+export const Theme: Record<
+  MarketStateType,
+  { icon: string; label: string; risk: string }
+> = {
+  CLEAN: { icon: "🟢", label: "Clear Market", risk: "Low" },
+  NOISE: { icon: "🟡", label: "Noisy", risk: "Medium" },
+  WAIT:  { icon: "🔵", label: "Wait Mode", risk: "Controlled" },
+  RISK:  { icon: "🔴", label: "High Risk", risk: "High" }
+};

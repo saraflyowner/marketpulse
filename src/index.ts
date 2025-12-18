@@ -1,30 +1,36 @@
-import 'dotenv/config';
-import express, { Request, Response } from 'express';
-import bodyParser from 'body-parser';
-import { startBot } from './bot/index.js';
+import express from "express";
+import bodyParser from "body-parser";
+import { initBotWebhook } from "./bot";
 
-const PORT = Number(process.env.PORT ?? 3000);
+const app = express();
+app.use(bodyParser.json());
 
-async function bootstrap(): Promise<void> {
-  const app = express();
-  app.use(bodyParser.json());
-
-  app.get('/', (_req: Request, res: Response) => {
-    res.json({ status: 'MarketPulseCore online' });
+/**
+ * Healthcheck (Railway)
+ */
+app.get("/health", (_req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "MarketPulseCore",
+    time: new Date().toISOString()
   });
+});
 
-  app.post('/telegram', (_req: Request, res: Response) => {
+/**
+ * Telegram Webhook endpoint
+ */
+app.post("/telegram/webhook", async (req, res) => {
+  try {
+    await initBotWebhook(req.body);
     res.sendStatus(200);
-  });
+  } catch (err) {
+    console.error("Webhook error:", err);
+    res.sendStatus(500);
+  }
+});
 
-  app.listen(PORT, () => {
-    console.log(`🌐 HTTP server running on port ${PORT}`);
-  });
+const PORT = Number(process.env.PORT) || 3000;
 
-  await startBot();
-}
-
-bootstrap().catch((err: unknown) => {
-  console.error('❌ Fatal error:', err);
-  process.exit(1);
+app.listen(PORT, () => {
+  console.log(`🌐 HTTP server running on port ${PORT}`);
 });
