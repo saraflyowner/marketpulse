@@ -6,7 +6,9 @@ if (!BOT_TOKEN) {
   throw new Error("BOT_TOKEN is not defined");
 }
 
-export const bot = new TelegramBot(BOT_TOKEN);
+export const bot = new TelegramBot(BOT_TOKEN, {
+  webHook: true
+});
 
 /**
  * Webhook handler (called from index.ts)
