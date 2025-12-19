@@ -6,12 +6,16 @@ if (!BOT_TOKEN) {
   throw new Error("BOT_TOKEN is not defined");
 }
 
+/**
+ * IMPORTANT:
+ * webhook mode => polling MUST be false
+ */
 export const bot = new TelegramBot(BOT_TOKEN, {
-  webHook: true
+  polling: false,
 });
 
 /**
- * Webhook handler (called from index.ts)
+ * Webhook handler
  */
 export async function initBotWebhook(update: any) {
   await bot.processUpdate(update);
@@ -37,7 +41,7 @@ bot.on("message", async (msg: Message) => {
   if (!msg.text?.startsWith("/")) {
     await bot.sendMessage(
       msg.chat.id,
-      "ℹ️ Available commands:\n/status\n/help"
+      "ℹ️ Available commands:\n/start\n/status"
     );
   }
 });
