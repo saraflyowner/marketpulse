@@ -1,50 +1,87 @@
-// src/bot/index.ts
-import type { Express, Request, Response } from "express";
-import TelegramBot from "node-telegram-bot-api";
-import { formatStatusMessage } from "../state/formatter.js";
+import { IncomingMessage, ServerResponse } from "http";
 
-// IMPORTANT: In production webhook mode, DO NOT enable polling.
 const BOT_TOKEN = process.env.BOT_TOKEN;
-
 if (!BOT_TOKEN) {
-  throw new Error("❌ BOT_TOKEN is not defined in environment variables");
+  throw new Error("BOT_TOKEN is not defined");
 }
 
-const bot = new TelegramBot(BOT_TOKEN);
+const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || null;
 
-// Register bot commands/handlers
-bot.onText(/^\/start\b/, async (msg) => {
-  await bot.sendMessage(
-    msg.chat.id,
-    "Professional market state intelligence is online."
-  );
-});
 
-bot.onText(/^\/status\b/, async (msg) => {
-  const text = formatStatusMessage();
-  await bot.sendMessage(msg.chat.id, text, { disable_web_page_preview: true });
-});
+async function sendMessage(chatId: number, text: string) {
+  await fetch(`${TELEGRAM_API}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+    }),
+  });
+}
 
-// Webhook initializer
-export function initBotWebhook(app: Express) {
-  // This MUST match the webhook URL you set in Telegram:
-  // https://<your-railway-domain>/telegram/webhook
-  app.post("/telegram/webhook", (req: Request, res: Response) => {
+
+export async function handleTelegramWebhook(
+  req: IncomingMessage,
+  res: ServerResponse
+) {
+ 
+  if (WEBHOOK_SECRET) {
+    const incomingSecret =
+      req.headers["x-telegram-bot-api-secret-token"];
+    if (incomingSecret !== WEBHOOK_SECRET) {
+      res.writeHead(403);
+      res.end("Forbidden");
+      return;
+    }
+  }
+
+  let body = "";
+  req.on("data", chunk => (body += chunk));
+  req.on("end", async () => {
     try {
-      // Telegram update is in req.body
-      bot.processUpdate(req.body);
-      // Telegram requires fast 200 OK response
-      return res.sendStatus(200);
+      const update = JSON.parse(body);
+
+      const message = update.message;
+      if (!message || !message.text) {
+        res.writeHead(200);
+        res.end("OK");
+        return;
+      }
+
+      const chatId = message.chat.id;
+      const text = message.text.trim();
+
+      console.log("📩 Incoming message:", {
+        chatId,
+        text,
+      });
+
+      if (text === "/start") {
+        await sendMessage(
+          chatId,
+          "📊 MarketPulseCore is live.\n\n" +
+            "Professional market state intelligence is online.\n\n" +
+            "Use /status to check market conditions."
+        );
+      }
+
+      if (text === "/status") {
+        await sendMessage(
+          chatId,
+          "📈 Market Status\n\n" +
+            "State: CLEAN\n" +
+            "Mood: 🟢 Clear Market\n" +
+            "Risk Level: Low"
+        );
+      }
+
+      res.writeHead(200);
+      res.end("OK");
     } catch (err) {
-      console.error("❌ Webhook processing error:", err);
-      return res.sendStatus(500);
+      console.error("❌ Webhook error:", err);
+      res.writeHead(500);
+      res.end("Internal Error");
     }
   });
-
-  // Optional: quick test endpoint
-  app.get("/telegram/webhook", (_req, res) => {
-    res.status(200).send("Webhook endpoint is alive.");
-  });
 }
-
-export default bot;

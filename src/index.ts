@@ -1,22 +1,27 @@
-// src/index.ts
-import "dotenv/config";
-import express from "express";
-import bodyParser from "body-parser";
-import { initBotWebhook } from "./bot/index.js";
+import http from "http";
+import { handleTelegramWebhook } from "./bot/index.js";
 
-const app = express();
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
-// Telegram sends JSON updates
-app.use(bodyParser.json({ limit: "2mb" }));
+const server = http.createServer(async (req, res) => {
+  // Health check
+  if (req.method === "GET" && req.url === "/health") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "ok", service: "marketpulse" }));
+    return;
+  }
 
-// Health endpoints (useful for Railway)
-app.get("/", (_req, res) => res.status(200).send("OK"));
-app.get("/health", (_req, res) => res.status(200).json({ ok: true }));
+  // Telegram webhook endpoint
+  if (req.method === "POST" && req.url === "/telegram/webhook") {
+    await handleTelegramWebhook(req, res);
+    return;
+  }
 
-// Initialize Telegram webhook route + handlers
-initBotWebhook(app);
+  // Default
+  res.writeHead(404);
+  res.end("Not Found");
+});
 
-const PORT = Number(process.env.PORT || 3000);
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 Server running on ${PORT}`);
 });
