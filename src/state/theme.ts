@@ -1,4 +1,4 @@
-import { MarketStateType } from "./realState";
+import { MarketStateType } from "./realState.js";
 
 export const Theme: Record<
   MarketStateType,
@@ -6,6 +6,6 @@ export const Theme: Record<
 > = {
   CLEAN: { icon: "🟢", label: "Clear Market", risk: "Low" },
   NOISE: { icon: "🟡", label: "Noisy", risk: "Medium" },
-  WAIT:  { icon: "🔵", label: "Wait Mode", risk: "Controlled" },
-  RISK:  { icon: "🔴", label: "High Risk", risk: "High" }
+  WAIT:  { icon: "🟠", label: "Wait Mode", risk: "Controlled" },
+  RISK:  { icon: "🔴", label: "High Risk", risk: "High" },
 };

@@ -1,29 +1,21 @@
 import TelegramBot, { Message } from "node-telegram-bot-api";
-import { formatStatusMessage } from "../state/formatter";
+import { formatStatusMessage } from "../state/formatter.js";
 
-const BOT_TOKEN = process.env.BOT_TOKEN!;
+const BOT_TOKEN = process.env.BOT_TOKEN;
 if (!BOT_TOKEN) {
   throw new Error("BOT_TOKEN is not defined");
 }
 
-/**
- * IMPORTANT:
- * webhook mode => polling MUST be false
- */
 export const bot = new TelegramBot(BOT_TOKEN, {
-  polling: false,
+  polling: false, // ✅ production (webhook)
 });
 
-/**
- * Webhook handler
- */
+console.log("🤖 Telegram bot initialized (webhook mode)");
+
 export async function initBotWebhook(update: any) {
   await bot.processUpdate(update);
 }
 
-/**
- * Commands
- */
 bot.onText(/^\/start$/, async (msg: Message) => {
   await bot.sendMessage(
     msg.chat.id,
