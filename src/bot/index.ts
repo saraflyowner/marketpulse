@@ -1,39 +1,30 @@
-import TelegramBot, { Message } from "node-telegram-bot-api";
+import TelegramBot from "node-telegram-bot-api";
 import { formatStatusMessage } from "../state/formatter.js";
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
-if (!BOT_TOKEN) {
-  throw new Error("BOT_TOKEN is not defined");
+const token = process.env.BOT_TOKEN;
+if (!token) {
+  throw new Error("BOT_TOKEN is not set");
 }
 
-export const bot = new TelegramBot(BOT_TOKEN, {
-  polling: false, // ✅ production (webhook)
-});
-
-console.log("🤖 Telegram bot initialized (webhook mode)");
+const bot = new TelegramBot(token);
 
 export async function initBotWebhook(update: any) {
-  await bot.processUpdate(update);
-}
+  if (!update.message) return;
 
-bot.onText(/^\/start$/, async (msg: Message) => {
-  await bot.sendMessage(
-    msg.chat.id,
-    "🤖 *MarketPulseCore*\n\nProfessional market state intelligence is online.",
-    { parse_mode: "Markdown" }
-  );
-});
+  const chatId = update.message.chat.id;
+  const text = update.message.text || "";
 
-bot.onText(/^\/status$/, async (msg: Message) => {
-  const text = formatStatusMessage();
-  await bot.sendMessage(msg.chat.id, text, { parse_mode: "Markdown" });
-});
-
-bot.on("message", async (msg: Message) => {
-  if (!msg.text?.startsWith("/")) {
+  if (text === "/start") {
     await bot.sendMessage(
-      msg.chat.id,
-      "ℹ️ Available commands:\n/start\n/status"
+      chatId,
+      "👋 Welcome to MarketPulse\nUse /status to get market regime"
     );
+    return;
   }
-});
+
+  if (text === "/status") {
+    const msg = formatStatusMessage();
+    await bot.sendMessage(chatId, msg);
+    return;
+  }
+}
