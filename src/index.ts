@@ -1,23 +1,18 @@
-import "dotenv/config";
 import express from "express";
 import bodyParser from "body-parser";
-import { initBotWebhook } from "./bot/index.js";
+import { handleTelegramUpdate } from "./bot/index.js";
 
 const app = express();
-app.use(bodyParser.json());
 
-app.get("/health", (_req, res) => {
-  res.status(200).json({
-    status: "ok",
-    service: "MarketPulseCore",
-    time: new Date().toISOString(),
-  });
-});
+/**
+ * 🚨 خیلی مهم
+ * تلگرام JSON خام می‌فرستد
+ */
+app.use(bodyParser.json());
 
 app.post("/telegram/webhook", async (req, res) => {
   try {
-    console.log("📩 Webhook update received");
-    await initBotWebhook(req.body);
+    await handleTelegramUpdate(req.body);
     res.sendStatus(200);
   } catch (err) {
     console.error("Webhook error:", err);
@@ -25,8 +20,8 @@ app.post("/telegram/webhook", async (req, res) => {
   }
 });
 
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 HTTP server running on port ${PORT}`);
+  console.log(`🚀 Server running on ${PORT}`);
 });

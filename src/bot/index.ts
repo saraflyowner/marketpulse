@@ -1,30 +1,28 @@
 import TelegramBot from "node-telegram-bot-api";
-import { formatStatusMessage } from "../state/formatter.js";
 
 const token = process.env.BOT_TOKEN;
 if (!token) {
-  throw new Error("BOT_TOKEN is not set");
+  throw new Error("❌ BOT_TOKEN is not defined");
 }
 
-const bot = new TelegramBot(token);
+export const bot = new TelegramBot(token, {
+  webHook: true
+});
 
-export async function initBotWebhook(update: any) {
-  if (!update.message) return;
-
-  const chatId = update.message.chat.id;
-  const text = update.message.text || "";
-
-  if (text === "/start") {
-    await bot.sendMessage(
-      chatId,
-      "👋 Welcome to MarketPulse\nUse /status to get market regime"
-    );
-    return;
-  }
-
-  if (text === "/status") {
-    const msg = formatStatusMessage();
-    await bot.sendMessage(chatId, msg);
-    return;
-  }
+export async function handleTelegramUpdate(update: any) {
+  await bot.processUpdate(update);
 }
+
+bot.onText(/\/start/, async (msg) => {
+  await bot.sendMessage(
+    msg.chat.id,
+    "🚀 Professional market state intelligence is online."
+  );
+});
+
+bot.onText(/\/status/, async (msg) => {
+  await bot.sendMessage(
+    msg.chat.id,
+    `📊 Market Status\nState: CLEAN\nMood: 🟢 Clear Market\nRisk Level: Low`
+  );
+});
