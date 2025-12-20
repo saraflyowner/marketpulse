@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "build": {
+    "installCommand": "npm install",
+    "buildCommand": "npm run build"
+  },
+  "deploy": {
+    "startCommand": "npm run start"
+  }
+}
